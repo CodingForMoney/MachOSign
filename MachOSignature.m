@@ -7,13 +7,27 @@
 //
 
 #import "MachOSignature.h"
-#include <AssertMacros.h>
 #include <mach-o/loader.h>
 #include <mach-o/fat.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
 #include <CommonCrypto/CommonCrypto.h>
 //#import "CCDegist.h"
+
+// In  macOS High Sierra and iOS 11 , __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES defaults to off
+// so we should define the macros
+#include <AssertMacros.h>
+#ifndef require
+    #define require(assertion, exceptionLabel)  __Require(assertion, exceptionLabel)
+#endif
+
+#ifndef require_noerr
+    #define require_noerr(errorCode, exceptionLabel)  __Require_noErr(errorCode, exceptionLabel)
+#endif
+
+#ifndef require_quiet
+    #define require_quiet(assertion, exceptionLabel)  __Require_Quiet(assertion, exceptionLabel)
+#endif
 
 /*
  * Magic numbers used by Code Signing

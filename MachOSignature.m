@@ -287,7 +287,7 @@ static CF_RETURNS_RETAINED CFArrayRef load_code_signatures(const char *path)
 
 + (NSDictionary *)loadSignature {
     CFArrayRef array = load_code_signatures([NSBundle mainBundle].executablePath.UTF8String);
-    NSDictionary *ret;
+    NSMutableDictionary *ret;
     if (array) {
         if (CFArrayGetCount(array)) {
             NSArray *list = (__bridge_transfer NSArray *)array;
@@ -296,9 +296,10 @@ static CF_RETURNS_RETAINED CFArrayRef load_code_signatures(const char *path)
             NSData *EntitlementsHashData = dic[@"EntitlementsHash"];
             if (EntitlementsData && EntitlementsHashData) {
                 ret = [[NSMutableDictionary alloc] init];
-                NSString *Entitlements = [[NSString alloc] initWithData:EntitlementsData
-                                                               encoding:NSUTF8StringEncoding];
-                [ret setValue:Entitlements forKey:@"Entitlements"];
+                NSDictionary *dict = [NSPropertyListSerialization propertyListWithData:EntitlementsData options:kNilOptions format:NULL error:NULL];
+                if (dict) {
+                    [ret addEntriesFromDictionary:dict];
+                }
                 NSMutableString *string = [@"" mutableCopy];
                 [EntitlementsHashData enumerateByteRangesUsingBlock:^(const void *bytes, NSRange byteRange, BOOL *stop) {
                     unsigned char *dataBytes = (unsigned char*)bytes;
@@ -311,14 +312,12 @@ static CF_RETURNS_RETAINED CFArrayRef load_code_signatures(const char *path)
                         }
                     }
                 }];
-                [ret setValue:string forKey:@"EntitlementsHash"];
+                [ret setValue:string forKey:@"hash"];
             }
         }else {
             CFRelease(array);
         }
     }
-    return ret;
+    return ret.copy;
 }
-
-
 @end
